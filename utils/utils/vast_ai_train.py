@@ -499,8 +499,11 @@ def build_startup_command() -> str:
     if github_repo:
         repo_name = github_repo.split("/")[-1].replace(".git", "")
         # Use single string for the clone + cd logic to avoid '&&' syntax errors
-        cmd_parts.append(f"if [ ! -d {repo_name} ]; then git clone {github_repo} {repo_name}; fi")
+        # FORCE FRESH CLONE: Delete existing directory to ensure no stale code
+        cmd_parts.append(f"rm -rf {repo_name} || true")
+        cmd_parts.append(f"git clone {github_repo} {repo_name}")
         cmd_parts.append(f"cd {repo_name}")
+        cmd_parts.append("ls -R utils/trainer || echo 'Warning: Could not list utils/trainer'") # Debugging
         cmd_parts.extend([
             "pip install --upgrade pip",
             "pip install -r requirements.txt || echo 'Warning: requirements.txt not found, continuing...'",
