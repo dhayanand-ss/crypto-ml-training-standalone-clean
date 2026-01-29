@@ -119,8 +119,9 @@ class TimeSeriesTransformerTrainer:
     
     def __init__(self, model, device='cpu'):
         self.model = model
-        self.device = device
-        self.model.to(device)
+        # Force CPU to avoid CUDA kernel errors on Vast.ai with incompatible drivers/images
+        self.device = 'cpu' 
+        self.model.to(self.device)
         
         # Loss and optimizer - CrossEntropyLoss for 3-class classification
         self.criterion = nn.CrossEntropyLoss()
