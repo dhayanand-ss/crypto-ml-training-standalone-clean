@@ -165,12 +165,14 @@ Examples:
         sys.exit(1)
     
     # Date Alignment and Mocking
+    print("\nChecking date alignment...")
     try:
         if 'date' not in news_df.columns:
             news_df['date'] = pd.to_datetime(news_df['created_at']) if 'created_at' in news_df.columns else None
         
-        news_df['date'] = pd.to_datetime(news_df['date'])
-        crypto_df['open_time'] = pd.to_datetime(crypto_df['open_time'])
+        # Ensure UTC and datetime format
+        news_df['date'] = pd.to_datetime(news_df['date'], utc=True)
+        crypto_df['open_time'] = pd.to_datetime(crypto_df['open_time'], utc=True)
         
         news_min = news_df['date'].min()
         news_max = news_df['date'].max()
@@ -180,29 +182,39 @@ Examples:
         print(f"News Range: {news_min} to {news_max}")
         print(f"Price Range: {crypto_min} to {crypto_max}")
         
+        # Simple overlap check (timezone-aware)
         overlap = (news_max >= crypto_min) and (news_min <= crypto_max)
         
         if not overlap:
             print("\nWARNING: No overlap between news and price dates.")
-            print("Generating aligned mock news data for training...")
+            print("Generating 100 aligned mock news articles for training...")
             
             # Generate mock news aligned with price data
             import numpy as np
             
-            # Select 50 random timestamps from price data range
-            mock_dates = crypto_df['open_time'].sample(n=50, replace=True).sort_values().values
+            # Select 100 random timestamps from price data range
+            # Use data from the last 24 hours of price data if possible
+            last_price_time = crypto_df['open_time'].max()
+            first_price_time = crypto_df['open_time'].min()
+            
+            mock_dates = pd.to_datetime(np.random.choice(
+                crypto_df['open_time'].values, size=100
+            ), utc=True)
             
             news_df = pd.DataFrame({
                 'date': mock_dates,
-                'title': [f"Mock Crypto News {i}" for i in range(50)],
-                'text': [f"This is a mock news article about crypto movement {i}. Bullish or bearish sentiment here." for i in range(50)],
-                'source': ['MockSource'] * 50
+                'title': [f"Mock Crypto News {i}" for i in range(100)],
+                'text': [f"This is a mock news article about crypto movement {i}. Bullish or bearish sentiment here." for i in range(100)],
+                'source': ['MockSource'] * 100
             })
             print(f"Generated {len(news_df)} mock articles aligned with price data.")
+        else:
+            print("Date overlap confirmed. Proceeding with real data.")
             
     except Exception as e:
         print(f"Warning: Date alignment check failed: {e}")
-        # Continue and let the trainer handle logic errors if critical
+        import traceback
+        traceback.print_exc()
 
     
     # Initialize model
