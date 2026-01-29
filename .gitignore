@@ -37,6 +37,8 @@ ENV/
 
 # Project specific
 data/
+!data/prices/BTCUSDT.csv
+!data/articles/articles.csv
 models/*.pth
 models/*.bin
 models/*.safetensors
