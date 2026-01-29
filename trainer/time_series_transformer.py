@@ -213,11 +213,24 @@ class TimeSeriesTransformerTrainer:
         while len(available_features) < 7:
             available_features.append('price_change')  # Duplicate if needed
         
-        # Take first 7 features
+        # Take first 7 features (or whatever we have)
         features = available_features[:7]
-        print(f"Using features: {features}")
         
-        # Remove any rows with NaNs in the selected features to prevent NaN scaling and NaN loss
+        # KEY FIX: Check if selected features are actually populated. 
+        # If a feature column is all NaNs (e.g. taker_base), drop the feature, not the rows.
+        # This prevents "0 samples" error.
+        valid_features = []
+        for feat in features:
+            if crypto_df[feat].isna().all():
+                print(f"WARNING: Feature '{feat}' is completely empty. Dropping feature.")
+            else:
+                valid_features.append(feat)
+        
+        if len(valid_features) == 0:
+            raise ValueError("All selected features are empty! Cannot train.")
+            
+        features = valid_features
+        print(f"Using valid features: {features}")
         initial_len = len(crypto_df)
         crypto_df = crypto_df.dropna(subset=features)
         if len(crypto_df) < initial_len:

@@ -146,11 +146,29 @@ class LightGBMTrainer:
         print(crypto_df.head())
         print("DEBUG: NaN counts:")
         print(crypto_df.isna().sum())
+
+        # KEY FIX: Check for completely empty feature columns and drop them first
+        valid_feature_cols = []
+        for col in feature_cols:
+             if col in crypto_df.columns:
+                 if crypto_df[col].isna().all():
+                     print(f"WARNING: Feature '{col}' is completely empty. Dropping feature.")
+                 else:
+                     valid_feature_cols.append(col)
         
-        crypto_df = crypto_df.dropna()
+        if len(valid_feature_cols) == 0:
+             print("WARNING: All features are empty! This will likely fail.")
+        else:
+             feature_cols = valid_feature_cols
+             print(f"Using {len(feature_cols)} valid features")
+
+        # Now only drop rows that have NaNs in the VALID feature columns (plus target)
+        cols_to_check = feature_cols + ['target']
+        crypto_df = crypto_df.dropna(subset=cols_to_check)
+        
         dropped_count = initial_len - len(crypto_df)
         if dropped_count > 0:
-             print(f"Dropped {dropped_count} rows containing NaNs (mostly indicator warm-up)")
+             print(f"Dropped {dropped_count} rows containing NaNs")
         
         if len(crypto_df) == 0:
             print("WARNING: All samples dropped after preparing features. Check for NaNs in input data.")
