@@ -88,11 +88,18 @@ def copy_data_to_instance(instance_id: str):
     """
     logger.info(f"Copying training data to instance {instance_id}...")
     
+    # Calculate the repository name (MUST match build_startup_command logic)
+    github_repo = os.getenv("VASTAI_GITHUB_REPO", "")
+    if github_repo:
+        repo_name = github_repo.split("/")[-1].replace(".git", "")
+    else:
+        # Fallback to standard name used in build_startup_command Priority 3
+        repo_name = "crypto-ml-training"
+        
     # Define data files to copy (host path -> remote path)
-    # Project root is assumed to be current working directory
     data_files = {
-        "data/prices/BTCUSDT.csv": "/workspace/crypto-ml-training-standalone/data/prices/BTCUSDT.csv",
-        "data/articles/articles.csv": "/workspace/crypto-ml-training-standalone/data/articles/articles.csv"
+        "data/prices/BTCUSDT.csv": f"/workspace/{repo_name}/data/prices/BTCUSDT.csv",
+        "data/articles/articles.csv": f"/workspace/{repo_name}/data/articles/articles.csv"
     }
     
     for host_path, remote_path in data_files.items():
