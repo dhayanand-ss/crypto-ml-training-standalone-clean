@@ -141,6 +141,12 @@ class LightGBMTrainer:
         # Remove rows with NaN values (technical indicators, last target, etc.)
         # Log before dropping to debug
         initial_len = len(crypto_df)
+        print(f"DEBUG: Before dropna - Shape: {crypto_df.shape}")
+        print("DEBUG: First 5 rows:")
+        print(crypto_df.head())
+        print("DEBUG: NaN counts:")
+        print(crypto_df.isna().sum())
+        
         crypto_df = crypto_df.dropna()
         dropped_count = initial_len - len(crypto_df)
         if dropped_count > 0:

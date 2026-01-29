@@ -17,7 +17,7 @@ trl>=0.8.0  # For TRL GRPO training
 # Gradient Boosting
 lightgbm>=3.3.0
 
-pandas-ta>=0.3.14b0
+pandas-ta
 ta>=0.10.0
 
 # Optional: Hyperparameter optimization
