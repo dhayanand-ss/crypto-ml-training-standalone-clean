@@ -42,7 +42,7 @@ GPU_QUERY = "gpu_total_ram>=11 disk_space>=30 verified=True datacenter=True"
 # The startup command clones repo and installs dependencies, so we just need a base image
 DOCKER_IMAGE = os.getenv(
     "VASTAI_DOCKER_IMAGE",
-    "python:3.10-slim"  # Public Python image - CUDA drivers available on Vast AI hosts
+    "pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime"  # Robust PyTorch image with CUDA support
 )
 
 # Blacklist storage path (configurable via environment variable)

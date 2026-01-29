@@ -56,13 +56,28 @@ def main():
         
         # Load or mock sentiment data
         sentiment_df = None
-        if os.path.exists("results/daily_sentiment_features.csv"):
-            sentiment_df = pd.read_csv("results/daily_sentiment_features.csv")
-            print("Loaded sentiment features from file")
-        elif os.path.exists(articles_path):
-             # Simplified mock for robust execution if pre-computed features missing
-             # In production, this should run the full sentiment pipeline
-            print("Generating sentiment features...")
+        sentiment_path = "results/daily_sentiment_features.csv"
+        
+        if os.path.exists(sentiment_path):
+            temp_sentiment = pd.read_csv(sentiment_path)
+            
+            # Check for date overlap
+            if 'date' not in crypto_df.columns and 'open_time' in crypto_df.columns:
+                crypto_df['date'] = pd.to_datetime(crypto_df['open_time'])
+            
+            crypto_dates = pd.to_datetime(crypto_df['date']).dt.strftime('%Y-%m-%d').unique()
+            sentiment_dates = pd.to_datetime(temp_sentiment['date']).dt.strftime('%Y-%m-%d').unique()
+            
+            overlap = set(crypto_dates).intersection(set(sentiment_dates))
+            if overlap:
+                sentiment_df = temp_sentiment
+                print(f"Loaded sentiment features from {sentiment_path} ({len(overlap)} overlapping days)")
+            else:
+                print(f"Warning: No date overlap between crypto data and {sentiment_path}. Will generate mocks.")
+        
+        # If no sentiment data loaded yet (either file missing or no overlap), generate mocks
+        if sentiment_df is None:
+            print("Generating mock sentiment features for training...")
             if 'date' not in crypto_df.columns and 'open_time' in crypto_df.columns:
                 crypto_df['date'] = pd.to_datetime(crypto_df['open_time'])
                 
