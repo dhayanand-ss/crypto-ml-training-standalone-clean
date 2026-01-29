@@ -544,13 +544,14 @@ def build_startup_command() -> str:
         f"export AIRFLOW_DAG_ID='{os.getenv('AIRFLOW_DAG_ID', '')}'",
         f"export AIRFLOW_TASK_ID='{os.getenv('AIRFLOW_TASK_ID', '')}'",
         
+        # Ensure data directories exist and download data from GitHub (fallback for copy_data_to_instance)
+        "mkdir -p data/prices data/articles",
+        f"wget -O data/prices/BTCUSDT.csv https://raw.githubusercontent.com/dhayanand-ss/crypto-ml-training-standalone-clean/main/data/prices/BTCUSDT.csv || echo 'Warning: Failed to download price data from GitHub'",
+        f"wget -O data/articles/articles.csv https://raw.githubusercontent.com/dhayanand-ss/crypto-ml-training-standalone-clean/main/data/articles/articles.csv || echo 'Warning: Failed to download news data from GitHub'",
+        
         # Run only LightGBM and TST training scripts (TRL disabled as per user request)
         "python -m utils.trainer.lightgbm_train --prices_path data/prices/BTCUSDT.csv --articles_path data/articles/articles.csv || echo 'LightGBM training failed'",
         "python -m utils.trainer.tst_train --prices_path data/prices/BTCUSDT.csv || echo 'TST training failed'"
-        
-        # Remove remote download attempt - we upload directly from host
-        # "python -m utils.utils.pre_train_dataset || echo 'Data download failed'", 
-        # "python -m utils.trainer.trl_train --prices_path data/prices/BTCUSDT.csv --articles_path data/articles/articles.csv || echo 'Training failed.'"
     ])
     
     # Add Google Cloud credentials setup if file exists
