@@ -1,4 +1,4 @@
-"""
+﻿"""
 LightGBM Trainer Model
 Uses LightGBM for cryptocurrency price prediction with advanced features
 """
@@ -401,7 +401,7 @@ class LightGBMTrainer:
         print("="*60)
         
         # Before saving a new trained model:
-        # Move the existing v3 → v2 (if v3 exists)
+        # Move the existing v3 â†’ v2 (if v3 exists)
         if v3_model_path.exists() and v3_features_path.exists():
             print("[SAVE] Moving old v3 to v2")
             try:
@@ -413,9 +413,9 @@ class LightGBMTrainer:
                 # Move v3 to v2
                 v3_model_path.rename(v2_model_path)
                 v3_features_path.rename(v2_features_path)
-                print(f"[SAVE] Successfully moved v3 → v2")
+                print(f"[SAVE] Successfully moved v3 â†’ v2")
             except Exception as e:
-                print(f"[SAVE] Warning: Failed to move v3 → v2: {e}. Continuing...")
+                print(f"[SAVE] Warning: Failed to move v3 â†’ v2: {e}. Continuing...")
         
         # Keep v1 unchanged (v1 is only created once, never overwritten)
         # Create v1 baseline if it doesn't exist (first training run)
@@ -463,7 +463,6 @@ class LightGBMTrainer:
             if self.best_iteration_ is not None:
                 print(f"  Best iteration: {self.best_iteration_}")
             if self.best_score_ is not None:
-                print(f"  Best score: {self.best_score_:.6f}")
             if self.evals_result_:
                 print(f"  Eval results preserved for {len(self.evals_result_)} validation sets")
         except Exception as e:
@@ -482,9 +481,9 @@ class LightGBMTrainer:
         Load trained model with 3-model baseline versioning strategy.
         
         Loading priority:
-        - Check if v3 exists → load v3
-        - Else if v2 exists → load v2
-        - Else → return False (no model found, need to train)
+        - Check if v3 exists â†’ load v3
+        - Else if v2 exists â†’ load v2
+        - Else â†’ return False (no model found, need to train)
         
         Note: lgb.Booster(model_file=...) resets internal states except trees.
         This method restores eval results and training metadata from saved file.
@@ -512,19 +511,19 @@ class LightGBMTrainer:
         model_path_to_load = None
         features_path_to_load = None
         
-        # Check if v3 exists → load it
+        # Check if v3 exists â†’ load it
         if v3_model_path.exists() and v3_features_path.exists():
             print("[LOAD] Loading v3 latest model")
             model_path_to_load = v3_model_path
             features_path_to_load = v3_features_path
             loaded_version = "v3"
-        # Else if v2 exists → load v2
+        # Else if v2 exists â†’ load v2
         elif v2_model_path.exists() and v2_features_path.exists():
             print("[LOAD] Loading v2 previous model")
             model_path_to_load = v2_model_path
             features_path_to_load = v2_features_path
             loaded_version = "v2"
-        # Else if v1 exists → load v1 (baseline)
+        # Else if v1 exists â†’ load v1 (baseline)
         elif v1_model_path.exists() and v1_features_path.exists():
             print("[LOAD] Loading v1 baseline model")
             model_path_to_load = v1_model_path
@@ -576,7 +575,6 @@ class LightGBMTrainer:
             if self.best_iteration_ is not None:
                 print(f"  Best iteration: {self.best_iteration_}")
             if self.best_score_ is not None:
-                print(f"  Best score: {self.best_score_:.6f}")
             if self.evals_result_:
                 print(f"  Eval results restored for {len(self.evals_result_)} validation sets")
             
