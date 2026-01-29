@@ -537,13 +537,13 @@ def build_startup_command() -> str:
         f"export AIRFLOW_DAG_ID='{os.getenv('AIRFLOW_DAG_ID', '')}'",
         f"export AIRFLOW_TASK_ID='{os.getenv('AIRFLOW_TASK_ID', '')}'",
         
-        # Run all three training scripts
+        # Run only LightGBM and TST training scripts (TRL disabled as per user request)
         "python -m utils.trainer.lightgbm_train --prices_path data/prices/BTCUSDT.csv --articles_path data/articles/articles.csv || echo 'LightGBM training failed'",
-        "python -m utils.trainer.tst_train --prices_path data/prices/BTCUSDT.csv || echo 'TST training failed'",
+        "python -m utils.trainer.tst_train --prices_path data/prices/BTCUSDT.csv || echo 'TST training failed'"
         
         # Remove remote download attempt - we upload directly from host
         # "python -m utils.utils.pre_train_dataset || echo 'Data download failed'", 
-        "python -m utils.trainer.trl_train --prices_path data/prices/BTCUSDT.csv --articles_path data/articles/articles.csv || echo 'Training failed.'"
+        # "python -m utils.trainer.trl_train --prices_path data/prices/BTCUSDT.csv --articles_path data/articles/articles.csv || echo 'Training failed.'"
     ])
     
     # Add Google Cloud credentials setup if file exists
