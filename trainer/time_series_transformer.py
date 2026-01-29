@@ -217,6 +217,12 @@ class TimeSeriesTransformerTrainer:
         features = available_features[:7]
         print(f"Using features: {features}")
         
+        # Remove any rows with NaNs in the selected features to prevent NaN scaling and NaN loss
+        initial_len = len(crypto_df)
+        crypto_df = crypto_df.dropna(subset=features)
+        if len(crypto_df) < initial_len:
+            print(f"Dropped {initial_len - len(crypto_df)} rows with missing values")
+            
         data = crypto_df[features].values
         
         # Get close prices before scaling (needed for label creation)
@@ -408,8 +414,12 @@ class TimeSeriesTransformerTrainer:
                 print(f'\nEarly stopping at epoch {epoch+1}')
                 break
         
-        # Load best model
-        self.model.load_state_dict(torch.load(str(temp_best_model_path), map_location=self.device))
+        # Load best model if it was saved (if training improved at least once)
+        if temp_best_model_path.exists():
+            print(f"[FINAL] Loading best model from {temp_best_model_path}")
+            self.model.load_state_dict(torch.load(str(temp_best_model_path), map_location=self.device))
+        else:
+            print("[WARNING] No improvement during training (no best model saved). Using final weights.")
         
         # ============================================================
         # SAVE: Before saving new model, move v3 → v2, save as v3

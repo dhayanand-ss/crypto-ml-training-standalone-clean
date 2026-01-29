@@ -121,7 +121,9 @@ class LightGBMTrainer:
                         'neutral_sentiment', 'positive_sentiment']
         for col in sentiment_cols:
             if col in crypto_df.columns:
-                crypto_df[col] = crypto_df[col].fillna(crypto_df[col].mean())
+                col_mean = crypto_df[col].mean()
+                fill_val = col_mean if not pd.isna(col_mean) else 0
+                crypto_df[col] = crypto_df[col].fillna(fill_val)
         
         # Create 3-class target variable (Sell, Hold, Buy) using threshold
         # Calculate price change percentage
@@ -129,16 +131,28 @@ class LightGBMTrainer:
         
         # Create 3-class labels: 0=Sell, 1=Hold, 2=Buy
         # Using threshold to determine significant price movements
-        threshold = 0.00015  # 0.015% threshold for 1-minute data (adjust if using different timeframe)
+        threshold = 0.00015  # 0.015% threshold for 1-minute data
         crypto_df['target'] = self._label_price_change(price_change_pct, threshold=threshold)
         
         # Select features
         feature_cols = [col for col in crypto_df.columns if col not in ['date', 'target']]
         feature_cols = [col for col in feature_cols if not col.startswith('open_time')]
         
-        # Remove rows with NaN values
+        # Remove rows with NaN values (technical indicators, last target, etc.)
+        # Log before dropping to debug
+        initial_len = len(crypto_df)
         crypto_df = crypto_df.dropna()
+        dropped_count = initial_len - len(crypto_df)
+        if dropped_count > 0:
+             print(f"Dropped {dropped_count} rows containing NaNs (mostly indicator warm-up)")
         
+        if len(crypto_df) == 0:
+            print("WARNING: All samples dropped after preparing features. Check for NaNs in input data.")
+            # Last-ditch attempt: if dropna made it zero, try to see which columns were NaN
+            # This is just for debugging on VastAI
+            print("NaN counts per column:")
+            print(crypto_df.isna().sum())
+            
         X = crypto_df[feature_cols].values
         y = crypto_df['target'].values
         
