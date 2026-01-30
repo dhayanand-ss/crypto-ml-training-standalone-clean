@@ -75,8 +75,9 @@ class GCSManager:
             self.bucket = self.client.bucket(self.bucket_name)
             logger.info(f"GCSManager initialized with bucket: {bucket}")
         except Exception as e:
-            logger.error(f"Failed to initialize GCS client: {e}")
-            raise
+            logger.warning(f"GCS client initialization failed: {e}. GCS operations will be disabled.")
+            self.client = None
+            self.bucket = None
     
     # -------------------
     # Hash helpers
@@ -88,6 +89,8 @@ class GCSManager:
     
     def _get_gcs_hash(self, hash_key: str) -> Optional[str]:
         """Get hash from GCS if it exists."""
+        if not self.bucket:
+            return None
         try:
             blob = self.bucket.blob(hash_key)
             if blob.exists():
@@ -117,6 +120,10 @@ class GCSManager:
         Returns:
             True if uploaded, False if skipped
         """
+        if not self.bucket:
+            logger.warning(f"Skipping GCS upload for {key}: GCS client not initialized.")
+            return False
+
         # Load DataFrame
         if isinstance(path_or_df, pd.DataFrame):
             df = path_or_df
@@ -156,7 +163,7 @@ class GCSManager:
             return True
         except Exception as e:
             logger.error(f"Failed to upload {key}: {e}")
-            raise
+            return False
     
     def download_df(
         self,
@@ -186,6 +193,12 @@ class GCSManager:
         
         # Download from GCS
         try:
+            if not self.bucket:
+                 logger.warning(f"GCS client not initialized. Cannot download {key}.")
+                 if os.path.exists(csv_path):
+                     return pd.read_csv(csv_path)
+                 raise FileNotFoundError(f"GCS not available and local file {csv_path} missing.")
+
             blob = self.bucket.blob(key)
             if not blob.exists():
                 raise FileNotFoundError(f"Blob {key} not found in bucket {self.bucket_name}")
@@ -241,6 +254,10 @@ class GCSManager:
             raise FileNotFoundError(f"Model file not found: {model_path}")
         
         # Upload main model file
+        if not self.bucket:
+            logger.warning(f"GCS client not initialized. Skipping model upload for {model_path.name}.")
+            return False
+
         gcs_key = f"models/{model_type}/{version}/{model_path.name}"
         try:
             blob = self.bucket.blob(gcs_key)
@@ -291,6 +308,12 @@ class GCSManager:
         local_path = local_dir / model_filename
         
         try:
+            if not self.bucket:
+                logger.warning(f"GCS client not initialized. Cannot download model {gcs_key}.")
+                if local_path.exists():
+                    return local_path
+                raise FileNotFoundError("GCS not available and local model missing.")
+
             blob = self.bucket.blob(gcs_key)
             if not blob.exists():
                 raise FileNotFoundError(f"Model {gcs_key} not found in bucket {self.bucket_name}")
@@ -322,6 +345,10 @@ class GCSManager:
         
         gcs_prefix = f"models/{model_type}/{version}/"
         
+        if not self.bucket:
+            logger.warning(f"GCS client not initialized. Skipping directory upload for {local_dir}")
+            return
+
         for file_path in local_dir.iterdir():
             if file_path.is_file():
                 gcs_key = f"{gcs_prefix}{file_path.name}"
@@ -397,6 +424,8 @@ class GCSManager:
     # -------------------
     def list_objects(self, prefix: str = '') -> List[str]:
         """List all objects with given prefix."""
+        if not self.bucket:
+            return []
         try:
             blobs = self.bucket.list_blobs(prefix=prefix)
             return [blob.name for blob in blobs]
@@ -406,6 +435,8 @@ class GCSManager:
     
     def delete_object(self, key: str):
         """Delete an object from GCS."""
+        if not self.bucket:
+            return
         try:
             blob = self.bucket.blob(key)
             blob.delete()
@@ -428,6 +459,9 @@ class GCSManager:
         prefix = parsed.path.lstrip("/")
         
         # If bucket name differs, get that bucket
+        if not self.client:
+            return
+
         if bucket_name != self.bucket_name:
             bucket = self.client.bucket(bucket_name)
         else:
@@ -463,6 +497,10 @@ class GCSManager:
             raise FileNotFoundError(f"File not found: {local_file}")
         
         try:
+            if not self.bucket:
+                logger.warning(f"GCS client not initialized. Skipping file upload: {local_file.name}")
+                return
+
             blob = self.bucket.blob(key)
             blob.upload_from_filename(str(local_file))
             logger.info(f"Uploaded {local_file.name} to gs://{self.bucket_name}/{key}")
@@ -476,6 +514,12 @@ class GCSManager:
         local_file.parent.mkdir(parents=True, exist_ok=True)
         
         try:
+            if not self.bucket:
+                logger.warning(f"GCS client not initialized. Cannot download {key}.")
+                if local_file.exists():
+                     return
+                raise FileNotFoundError("GCS not available and local file missing.")
+
             blob = self.bucket.blob(key)
             if not blob.exists():
                 raise FileNotFoundError(f"Blob {key} not found in bucket {self.bucket_name}")

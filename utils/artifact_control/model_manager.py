@@ -56,7 +56,15 @@ class ModelManager:
         if not MLFLOW_AVAILABLE:
             raise ImportError("MLflow is required for ModelManager. Install with: pip install mlflow")
         
-        self.client = MlflowClient(tracking_uri)
+        if tracking_uri or os.getenv("MLFLOW_TRACKING_URI"):
+            try:
+                self.client = MlflowClient(tracking_uri)
+            except Exception as e:
+                logger.warning(f"Failed to initialize MLflow client: {e}. MLflow features will be limited.")
+                self.client = None
+        else:
+            logger.info("MLflow tracking URI not provided. MLflow features will be disabled.")
+            self.client = None
         self.bucket = bucket
         self.cache_dir = os.path.join(os.getcwd(), cache_dir)
         
@@ -76,6 +84,8 @@ class ModelManager:
     # -------------------
     def list_versions(self, name: str) -> list:
         """Return all versions sorted by creation time ascending."""
+        if not self.client:
+            return []
         try:
             versions = self.client.search_model_versions(f"name='{name}'")
             versions = sorted(versions, key=lambda v: v.creation_timestamp)
@@ -87,6 +97,9 @@ class ModelManager:
     
     def register(self, model_uri: str, name: str):
         """Register a new version from run artifact path."""
+        if not self.client:
+            logger.warning("MLflow client not initialized. Cannot register model.")
+            return None
         try:
             mv = self.client.create_model_version(name=name, source=model_uri, run_id=None)
             logger.info(f"Registered {name} v{mv.version}")
@@ -144,8 +157,9 @@ class ModelManager:
                         logger.warning(f"Failed to delete GCS artifacts: {e}")
                 
                 try:
-                    self.client.delete_model_version(name, str(v.version))
-                    logger.info(f"Deleted model version {name} v{v.version}")
+                    if self.client:
+                        self.client.delete_model_version(name, str(v.version))
+                        logger.info(f"Deleted model version {name} v{v.version}")
                 except Exception as e:
                     logger.error(f"Failed to delete model version: {e}")
         
@@ -190,7 +204,7 @@ class ModelManager:
             else:
                 stage = "Archived"
             
-            if v.current_stage != stage:
+            if v.current_stage != stage and self.client:
                 logger.info(f"Transitioning {name} v{v.version} to {stage}")
                 try:
                     self.client.transition_model_version_stage(
@@ -279,6 +293,10 @@ class ModelManager:
         
         # Register model
         try:
+            if not self.client:
+                logger.warning("MLflow client not initialized. Skipping model registration.")
+                return None
+
             result = mlflow.register_model(
                 model_uri=f"runs:/{mlflow.active_run().info.run_id}/{artifact_path}",
                 name=name
@@ -287,7 +305,7 @@ class ModelManager:
             return result
         except Exception as e:
             logger.error(f"Failed to register model: {e}")
-            raise
+            return None
     
     # -------------------
     # Model Loading & Caching

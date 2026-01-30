@@ -197,10 +197,15 @@ def copy_data_to_instance(instance_id: str):
         repo_name = "crypto-ml-training"
         
     # Define data files to copy (host path -> remote path)
+    # Check for environmental overrides first
+    prices_path_src = os.getenv("VASTAI_DATA_PRICES_PATH", "data/prices/BTCUSDT.csv")
+    prices_test_src = os.getenv("VASTAI_DATA_PRICES_TEST_PATH", "data/prices/BTCUSDT_test.csv")
+    articles_path_src = os.getenv("VASTAI_DATA_ARTICLES_PATH", "data/articles/articles.csv")
+
     data_files = {
-        "data/prices/BTCUSDT.csv": f"/workspace/{repo_name}/data/prices/BTCUSDT.csv",
-        "data/prices/BTCUSDT_test.csv": f"/workspace/{repo_name}/data/prices/BTCUSDT_test.csv",
-        "data/articles/articles.csv": f"/workspace/{repo_name}/data/articles/articles.csv"
+        prices_path_src: f"/workspace/{repo_name}/data/prices/BTCUSDT.csv",
+        prices_test_src: f"/workspace/{repo_name}/data/prices/BTCUSDT_test.csv",
+        articles_path_src: f"/workspace/{repo_name}/data/articles/articles.csv"
     }
 
     # Add GCP credentials to file list if configured
@@ -660,9 +665,9 @@ def build_startup_command() -> str:
         "echo 'Waiting for data upload...'",
     ])
 
-    # Wait for GCP credentials IF configured
+    # Wait for GCP credentials IF configured AND FOUND locally
     gcp_creds_path = os.getenv("GCP_CREDENTIALS_PATH")
-    if gcp_creds_path:
+    if gcp_creds_path and os.path.exists(gcp_creds_path):
         cmd_parts.append("while [ ! -f /workspace/gcp-credentials.json ]; do echo 'Waiting for GCP credentials...'; sleep 5; done")
         
     cmd_parts.extend([
@@ -676,7 +681,7 @@ def build_startup_command() -> str:
     ])
     
     # Add Google Cloud credentials setup if file exists
-    if gcp_creds_path:
+    if gcp_creds_path and os.path.exists(gcp_creds_path):
         # We'll upload this file separately via SCP/VastAI copy
         # Here we just ensure the env var points to the destination
         cmd_parts.insert(1, 'export GOOGLE_APPLICATION_CREDENTIALS="/workspace/gcp-credentials.json"')

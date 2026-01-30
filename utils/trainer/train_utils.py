@@ -203,24 +203,42 @@ def generate_random_news(df_prices, num_news=50):
     return df_news
 
 def download_s3_dataset(coin, trl_model=False):
-    s3_manager = GCSManager(
-   )
-    
-    coins = ["BTCUSDT"] if trl_model else [coin]
-    
     # Use relative paths for local execution
     base_data_dir = "data"
+    coins = ["BTCUSDT"] if trl_model else [coin]
+    
+    # Check if all files exist locally first
+    all_local = True
+    if trl_model:
+        if not os.path.exists(os.path.join(base_data_dir, "articles", "articles.csv")):
+            all_local = False
+    
+    for c in coins:
+        if not os.path.exists(os.path.join(base_data_dir, "prices", f"{c}_test.csv")):
+            all_local = False
+        if not os.path.exists(os.path.join(base_data_dir, "prices", f"{c}.csv")):
+            all_local = False
+            
+    if all_local:
+        print("All datasets found locally. Skipping GCS download.")
+        return
+
+    try:
+        s3_manager = GCSManager()
+    except Exception as e:
+        print(f"WARNING: Could not initialize GCSManager: {e}. Proceeding with local files if available.")
+        return
     
     if trl_model:
         article_path = os.path.join(base_data_dir, "articles", "articles.csv")
         s3_manager.download_df(article_path, key=f'articles/articles.parquet')
         
-    for coin in coins:
-        price_test_path = os.path.join(base_data_dir, "prices", f"{coin}_test.csv")
-        s3_manager.download_df(price_test_path, key=f'prices/{coin}_test.parquet')
+    for c in coins:
+        price_test_path = os.path.join(base_data_dir, "prices", f"{c}_test.csv")
+        s3_manager.download_df(price_test_path, key=f'prices/{c}_test.parquet')
     
-        prices_path = os.path.join(base_data_dir, "prices", f"{coin}.csv")
-        s3_manager.download_df(prices_path, key=f'prices/{coin}.parquet')
+        prices_path = os.path.join(base_data_dir, "prices", f"{c}.csv")
+        s3_manager.download_df(prices_path, key=f'prices/{c}.parquet')
         
             
 def convert_to_onnx(model, type="lightgbm", tokenizer=None, sample_input=None):
