@@ -17,7 +17,6 @@ trl>=0.8.0  # For TRL GRPO training
 # Gradient Boosting
 lightgbm>=3.3.0
 
-pandas-ta
 ta>=0.10.0
 
 # Optional: Hyperparameter optimization
@@ -59,3 +58,5 @@ watchdog>=3.0.0  # File system monitoring for job handler
 
 # Database
 psycopg2-binary>=2.9.0  # PostgreSQL adapter
+wandb>=0.15.0
+onnxmltools>=1.11.0

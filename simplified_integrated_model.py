@@ -41,7 +41,7 @@ except ImportError:
 # MLflow integration
 try:
     import mlflow
-    MLFLOW_AVAILABLE = True
+    MLFLOW_AVAILABLE = os.getenv("SKIP_MLFLOW", "0") != "1"
 except ImportError:
     MLFLOW_AVAILABLE = False
     print("Warning: mlflow not available. MLflow logging will be disabled.")

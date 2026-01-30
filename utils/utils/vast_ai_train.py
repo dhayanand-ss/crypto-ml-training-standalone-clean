@@ -99,6 +99,7 @@ def copy_data_to_instance(instance_id: str):
     # Define data files to copy (host path -> remote path)
     data_files = {
         "data/prices/BTCUSDT.csv": f"/workspace/{repo_name}/data/prices/BTCUSDT.csv",
+        "data/prices/BTCUSDT_test.csv": f"/workspace/{repo_name}/data/prices/BTCUSDT_test.csv",
         "data/articles/articles.csv": f"/workspace/{repo_name}/data/articles/articles.csv"
     }
     
@@ -544,14 +545,18 @@ def build_startup_command() -> str:
         f"export AIRFLOW_DAG_ID='{os.getenv('AIRFLOW_DAG_ID', '')}'",
         f"export AIRFLOW_TASK_ID='{os.getenv('AIRFLOW_TASK_ID', '')}'",
         
-        # Ensure data directories exist and download data from GitHub (fallback for copy_data_to_instance)
+        # Ensure data directories exist
         "mkdir -p data/prices data/articles",
-        f"wget -O data/prices/BTCUSDT.csv https://raw.githubusercontent.com/dhayanand-ss/crypto-ml-training-standalone-clean/main/data/prices/BTCUSDT.csv || echo 'Warning: Failed to download price data from GitHub'",
-        f"wget -O data/articles/articles.csv https://raw.githubusercontent.com/dhayanand-ss/crypto-ml-training-standalone-clean/main/data/articles/articles.csv || echo 'Warning: Failed to download news data from GitHub'",
+        
+        # Wait for data to be uploaded via copy_data_to_instance (avoids race condition)
+        "echo 'Waiting for data upload...'",
+        "while [ ! -f data/prices/BTCUSDT.csv ] || [ ! -f data/articles/articles.csv ]; do sleep 5; done",
+        "echo 'Data found. Starting training...'",
         
         # Run only LightGBM and TST training scripts (TRL disabled as per user request)
-        "python -m utils.trainer.lightgbm_train --prices_path data/prices/BTCUSDT.csv --articles_path data/articles/articles.csv || echo 'LightGBM training failed'",
-        "python -m utils.trainer.tst_train --prices_path data/prices/BTCUSDT.csv || echo 'TST training failed'"
+        # Scripts use relative paths and expect data in data/ folder
+        "python -m utils.trainer.lgb_train --coin BTCUSDT || echo 'LightGBM training failed'",
+        "python -m utils.trainer.tst_train --coin BTCUSDT || echo 'TST training failed'"
     ])
     
     # Add Google Cloud credentials setup if file exists

@@ -52,9 +52,10 @@ def convert_finbert_to_onnx(model_path=None, output_path=None):
     logger.info("=" * 60)
     
     # Initialize analyzer to get the model
-    logger.info("Loading FinBERT model...")
+    logger.info("Instantiating FinBERTSentimentAnalyzer...")
     try:
         analyzer = FinBERTSentimentAnalyzer()
+        logger.info("FinBERTSentimentAnalyzer instantiated.")
         model = analyzer.model
         tokenizer = analyzer.tokenizer
         logger.info("Model loaded successfully")

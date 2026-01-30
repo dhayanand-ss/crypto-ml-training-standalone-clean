@@ -127,13 +127,17 @@ class FinBERTSentimentAnalyzer:
         print("LoRA adapters: COMPULSORY (always enabled)")
         
         # Load tokenizer
+        print(f"Step 1: Loading Tokenizer for {model_name}...")
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        print("Step 1 Complete: Tokenizer loaded.")
         
         # Load model
+        print(f"Step 2: Loading Base Model {model_name}...")
         self.model = AutoModelForSequenceClassification.from_pretrained(
             model_name,
             num_labels=3  # Negative, Neutral, Positive (maps to Sell, Hold, Buy)
         )
+        print("Step 2 Complete: Base model loaded.")
         
         # Apply LoRA adapters (COMPULSORY)
         if lora_config is None:

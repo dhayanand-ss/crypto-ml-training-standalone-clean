@@ -165,6 +165,19 @@ def load_production_models() -> Dict[str, Any]:
             logger.warning("No registered models found in MLflow. Make sure models are registered.")
             return loaded_models
         
+        # Ensure specific important models are checked even if search misses them
+        known_models = ["BTCUSDT_lightgbm", "BTCUSDT_tst"]
+        found_names = {m.name for m in registered_models}
+        
+        for name in known_models:
+            if name not in found_names:
+                try:
+                    logger.info(f"Explicitly checking for known model: {name}")
+                    m = model_manager.client.get_registered_model(name)
+                    registered_models.append(m)
+                except Exception as e:
+                    logger.warning(f"Known model {name} not found: {e}")
+
         total_production_versions = 0
         for model in registered_models:
             model_name = model.name
@@ -318,24 +331,46 @@ def refresh_models(model_name: Optional[str] = None, version: Optional[Union[str
             with _model_locks[model_key]:
                 try:
                     logger.info(f"Refreshing model: {model_key}")
-                    ort_session = model_manager.load_onnx_model(model_name, version)
                     
-                    # Get input/output shapes
-                    input_shape = None
-                    output_shape = None
-                    if ort_session.get_inputs():
-                        input_shape = list(ort_session.get_inputs()[0].shape)
-                    if ort_session.get_outputs():
-                        output_shape = list(ort_session.get_outputs()[0].shape)
-                    
-                    _model_cache[model_key] = {
-                        'session': ort_session,
-                        'model_name': model_name,
-                        'version': version,
-                        'input_shape': input_shape,
-                        'output_shape': output_shape,
-                        'loaded_at': time.time()
-                    }
+                    # Try ONNX first
+                    try:
+                        ort_session = model_manager.load_onnx_model(model_name, version)
+                        
+                        # Get input/output shapes
+                        input_shape = None
+                        output_shape = None
+                        if ort_session.get_inputs():
+                            input_shape = list(ort_session.get_inputs()[0].shape)
+                        if ort_session.get_outputs():
+                            output_shape = list(ort_session.get_outputs()[0].shape)
+                        
+                        _model_cache[model_key] = {
+                            'session': ort_session,
+                            'type': 'onnx',
+                            'model_name': model_name,
+                            'version': version,
+                            'input_shape': input_shape,
+                            'output_shape': output_shape,
+                            'loaded_at': time.time()
+                        }
+                    except Exception as onnx_err:
+                        logger.warning(f"Could not load {model_name} as ONNX during refresh: {onnx_err}. Trying fallback types...")
+                        
+                        # Fallback: Detect type or try others
+                        model_type = "pytorch" # Default fallback
+                        if "lightgbm" in model_name.lower():
+                            model_type = "lightgbm"
+                        
+                        logger.info(f"Attempting to load as {model_type} model: {model_name}")
+                        model, loaded_version = model_manager.load_model(model_name, version, model_type=model_type)
+                        
+                        _model_cache[model_key] = {
+                            'model': model,
+                            'type': model_type,
+                            'model_name': model_name,
+                            'version': version,
+                            'loaded_at': time.time()
+                        }
                     
                     logger.info(f"Successfully refreshed {model_key}")
                     
@@ -357,7 +392,7 @@ async def lifespan(app: FastAPI):
     logger.info(f"MLflow Tracking URI: {mlflow_tracking_uri}")
     
     try:
-        # refresh_models()  # Load all production models
+        refresh_models()  # Load all production models
         logger.info(f"Loaded {len(_model_cache)} production models on startup")
     except Exception as e:
         logger.error(f"Failed to load models on startup: {e}")

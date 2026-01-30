@@ -34,7 +34,7 @@ class S3Manager:
         endpoint_url: Optional[str] = None,
         aws_access_key_id: Optional[str] = None,
         aws_secret_access_key: Optional[str] = None,
-        region_name: str = "apac"
+        region_name: str = "ap-southeast-1"
     ):
         """
         Initialize S3Manager.
@@ -44,7 +44,7 @@ class S3Manager:
             endpoint_url: S3 endpoint URL (from S3_URL env var if not provided)
             aws_access_key_id: AWS access key (from AWS_ACCESS_KEY_ID env var if not provided)
             aws_secret_access_key: AWS secret key (from AWS_SECRET_ACCESS_KEY env var if not provided)
-            region_name: AWS region name (default: "apac")
+            region_name: AWS region name (default: "ap-southeast-1")
         """
         self.bucket = bucket
         self.endpoint_url = endpoint_url or os.getenv("S3_URL")

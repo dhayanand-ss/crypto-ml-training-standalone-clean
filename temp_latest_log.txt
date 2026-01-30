@@ -1,0 +1,51 @@
+﻿[2026-01-29T05:13:55.079+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2026-01-29T05:13:55.109+0000] {taskinstance.py:2073} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: training_pipeline.monitor_all_to_kill manual__2026-01-29T05:12:21.731350+00:00 [queued]>
+[2026-01-29T05:13:55.116+0000] {taskinstance.py:2073} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: training_pipeline.monitor_all_to_kill manual__2026-01-29T05:12:21.731350+00:00 [queued]>
+[2026-01-29T05:13:55.117+0000] {taskinstance.py:2303} INFO - Starting attempt 1 of 1
+[2026-01-29T05:13:55.130+0000] {taskinstance.py:2327} INFO - Executing <Task(PythonOperator): monitor_all_to_kill> on 2026-01-29 05:12:21.731350+00:00
+[2026-01-29T05:13:55.135+0000] {standard_task_runner.py:63} INFO - Started process 1370 to run task
+[2026-01-29T05:13:55.139+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'training_pipeline', 'monitor_all_to_kill', 'manual__2026-01-29T05:12:21.731350+00:00', '--job-id', '218', '--raw', '--subdir', 'DAGS_FOLDER/DAG.py', '--cfg-path', '/tmp/tmptefgpq0p']
+[2026-01-29T05:13:55.142+0000] {standard_task_runner.py:91} INFO - Job 218: Subtask monitor_all_to_kill
+[2026-01-29T05:13:55.199+0000] {task_command.py:426} INFO - Running <TaskInstance: training_pipeline.monitor_all_to_kill manual__2026-01-29T05:12:21.731350+00:00 [running]> on host 0a84df8bc12d
+[2026-01-29T05:13:55.277+0000] {taskinstance.py:2644} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='training_pipeline' AIRFLOW_CTX_TASK_ID='monitor_all_to_kill' AIRFLOW_CTX_EXECUTION_DATE='2026-01-29T05:12:21.731350+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-01-29T05:12:21.731350+00:00'
+[2026-01-29T05:13:58.075+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2026-01-29T05:13:58.085+0000] {logging_mixin.py:188} INFO - Monitoring all models to kill instances
+[2026-01-29T05:14:00.204+0000] {logging_mixin.py:188} INFO - Current status from DB: [{'model': 'lightgbm', 'coin': 'BTCUSDT', 'state': 'PENDING', 'error_message': None}, {'model': 'trl', 'coin': 'ALL', 'state': 'PENDING', 'error_message': None}, {'model': 'tst', 'coin': 'BTCUSDT', 'state': 'PENDING', 'error_message': None}]
+[2026-01-29T05:14:00.205+0000] {logging_mixin.py:188} INFO - Not all models are done yet. Checking again in 10 seconds...
+[2026-01-29T05:14:10.932+0000] {logging_mixin.py:188} INFO - Current status from DB: [{'model': 'lightgbm', 'coin': 'BTCUSDT', 'state': 'PENDING', 'error_message': None}, {'model': 'trl', 'coin': 'ALL', 'state': 'PENDING', 'error_message': None}, {'model': 'tst', 'coin': 'BTCUSDT', 'state': 'PENDING', 'error_message': None}]
+[2026-01-29T05:14:10.933+0000] {logging_mixin.py:188} INFO - Not all models are done yet. Checking again in 10 seconds...
+[2026-01-29T05:14:21.319+0000] {logging_mixin.py:188} INFO - Current status from DB: [{'model': 'lightgbm', 'coin': 'BTCUSDT', 'state': 'PENDING', 'error_message': None}, {'model': 'trl', 'coin': 'ALL', 'state': 'PENDING', 'error_message': None}, {'model': 'tst', 'coin': 'BTCUSDT', 'state': 'PENDING', 'error_message': None}]
+[2026-01-29T05:14:21.319+0000] {logging_mixin.py:188} INFO - Not all models are done yet. Checking again in 10 seconds...
+[2026-01-29T05:14:31.672+0000] {logging_mixin.py:188} INFO - Current status from DB: [{'model': 'lightgbm', 'coin': 'BTCUSDT', 'state': 'PENDING', 'error_message': None}, {'model': 'trl', 'coin': 'ALL', 'state': 'PENDING', 'error_message': None}, {'model': 'tst', 'coin': 'BTCUSDT', 'state': 'PENDING', 'error_message': None}]
+[2026-01-29T05:14:31.673+0000] {logging_mixin.py:188} INFO - Not all models are done yet. Checking again in 10 seconds...
+[2026-01-29T05:14:35.738+0000] {local_task_job_runner.py:310} WARNING - State of this instance has been externally set to None. Terminating instance.
+[2026-01-29T05:14:35.739+0000] {local_task_job_runner.py:222} INFO - ::endgroup::
+[2026-01-29T05:14:35.741+0000] {process_utils.py:132} INFO - Sending 15 to group 1370. PIDs of all processes in the group: [1370]
+[2026-01-29T05:14:35.741+0000] {process_utils.py:87} INFO - Sending the signal 15 to group 1370
+[2026-01-29T05:14:35.742+0000] {taskinstance.py:2607} ERROR - Received SIGTERM. Terminating subprocesses.
+[2026-01-29T05:14:35.742+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2026-01-29T05:14:35.749+0000] {taskinstance.py:2890} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/models/taskinstance.py", line 465, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/models/taskinstance.py", line 432, in _execute_callable
+    return execute_callable(context=context, **execute_callable_kwargs)
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/models/baseoperator.py", line 400, in wrapper
+    return func(self, *args, **kwargs)
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/operators/python.py", line 235, in execute
+    return_value = self.execute_callable()
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/operators/python.py", line 252, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+  File "/opt/airflow/dags/DAG.py", line 287, in monitor_all_state_to_kill
+    time.sleep(10)  # Wait for 10 seconds before checking again
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/models/taskinstance.py", line 2609, in signal_handler
+    raise AirflowTaskTerminated("Task received SIGTERM signal")
+airflow.exceptions.AirflowTaskTerminated: Task received SIGTERM signal
+[2026-01-29T05:14:35.754+0000] {taskinstance.py:1205} INFO - Marking task as FAILED. dag_id=training_pipeline, task_id=monitor_all_to_kill, execution_date=20260129T051221, start_date=20260129T051355, end_date=20260129T051435
+[2026-01-29T05:14:37.381+0000] {standard_task_runner.py:110} ERROR - Failed to execute job 218 for task monitor_all_to_kill ((psycopg2.errors.ForeignKeyViolation) insert or update on table "task_fail" violates foreign key constraint "task_fail_ti_fkey"
+DETAIL:  Key (dag_id, task_id, run_id, map_index)=(training_pipeline, monitor_all_to_kill, manual__2026-01-29T05:12:21.731350+00:00, -1) is not present in table "task_instance".
+
+[SQL: INSERT INTO task_fail (task_id, dag_id, run_id, map_index, start_date, end_date, duration) VALUES (%(task_id)s, %(dag_id)s, %(run_id)s, %(map_index)s, %(start_date)s, %(end_date)s, %(duration)s) RETURNING task_fail.id]
+[parameters: {'task_id': 'monitor_all_to_kill', 'dag_id': 'training_pipeline', 'run_id': 'manual__2026-01-29T05:12:21.731350+00:00', 'map_index': -1, 'start_date': datetime.datetime(2026, 1, 29, 5, 13, 55, 109964, tzinfo=Timezone('UTC')), 'end_date': datetime.datetime(2026, 1, 29, 5, 14, 35, 753955, tzinfo=Timezone('UTC')), 'duration': 40}]
+(Background on this error at: https://sqlalche.me/e/14/gkpj); 1370)
+[2026-01-29T05:14:37.392+0000] {process_utils.py:80} INFO - Process psutil.Process(pid=1370, status='terminated', exitcode=1, started='05:13:55') (1370) terminated with exit code 1

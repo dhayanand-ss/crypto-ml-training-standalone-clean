@@ -1,0 +1,48 @@
+﻿[2026-01-29T05:12:39.211+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2026-01-29T05:12:39.236+0000] {taskinstance.py:2073} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: training_pipeline.vast_ai_train manual__2026-01-29T05:12:21.731350+00:00 [queued]>
+[2026-01-29T05:12:39.242+0000] {taskinstance.py:2073} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: training_pipeline.vast_ai_train manual__2026-01-29T05:12:21.731350+00:00 [queued]>
+[2026-01-29T05:12:39.243+0000] {taskinstance.py:2303} INFO - Starting attempt 1 of 1
+[2026-01-29T05:12:39.254+0000] {taskinstance.py:2327} INFO - Executing <Task(PythonOperator): vast_ai_train> on 2026-01-29 05:12:21.731350+00:00
+[2026-01-29T05:12:39.258+0000] {standard_task_runner.py:63} INFO - Started process 1271 to run task
+[2026-01-29T05:12:39.261+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'training_pipeline', 'vast_ai_train', 'manual__2026-01-29T05:12:21.731350+00:00', '--job-id', '215', '--raw', '--subdir', 'DAGS_FOLDER/DAG.py', '--cfg-path', '/tmp/tmp6d7xeftd']
+[2026-01-29T05:12:39.263+0000] {standard_task_runner.py:91} INFO - Job 215: Subtask vast_ai_train
+[2026-01-29T05:12:39.311+0000] {task_command.py:426} INFO - Running <TaskInstance: training_pipeline.vast_ai_train manual__2026-01-29T05:12:21.731350+00:00 [running]> on host 0a84df8bc12d
+[2026-01-29T05:12:39.378+0000] {taskinstance.py:2644} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='training_pipeline' AIRFLOW_CTX_TASK_ID='vast_ai_train' AIRFLOW_CTX_EXECUTION_DATE='2026-01-29T05:12:21.731350+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-01-29T05:12:21.731350+00:00'
+[2026-01-29T05:12:41.869+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2026-01-29T05:12:41.885+0000] {vast_ai_train.py:592} INFO - GCP_CREDENTIALS_PATH is set to: /opt/***/gcp-credentials.json. Credentials will be uploaded.
+[2026-01-29T05:12:41.886+0000] {vast_ai_train.py:602} INFO - Running in Airflow context: DAG=training_pipeline, Task=vast_ai_train, Run=manual__2026-01-29T05:12:21.731350+00:00
+[2026-01-29T05:12:41.887+0000] {vast_ai_train.py:607} INFO - ============================================================
+[2026-01-29T05:12:41.888+0000] {vast_ai_train.py:608} INFO - Starting Vast.ai Instance Creation
+[2026-01-29T05:12:41.888+0000] {vast_ai_train.py:609} INFO - ============================================================
+[2026-01-29T05:12:42.344+0000] {vast_ai_train.py:74} INFO - Vast.ai CLI configured successfully
+[2026-01-29T05:12:42.345+0000] {vast_ai_train.py:620} INFO - Loaded 0 blacklisted machines
+[2026-01-29T05:12:42.346+0000] {vast_ai_train.py:628} INFO - Cleaning up existing instances...
+[2026-01-29T05:12:42.347+0000] {kill_vast_ai_instances.py:150} INFO - ============================================================
+[2026-01-29T05:12:42.347+0000] {kill_vast_ai_instances.py:150} INFO - Starting Vast.ai Instance Cleanup
+[2026-01-29T05:12:42.348+0000] {kill_vast_ai_instances.py:150} INFO - ============================================================
+[2026-01-29T05:12:42.794+0000] {kill_vast_ai_instances.py:42} INFO - Vast.ai CLI configured successfully
+[2026-01-29T05:12:45.042+0000] {kill_vast_ai_instances.py:102} INFO - Found 0 active instances
+[2026-01-29T05:12:45.042+0000] {kill_vast_ai_instances.py:150} INFO - No active instances found. Nothing to terminate.
+[2026-01-29T05:12:52.833+0000] {vast_ai_train.py:244} INFO - Found 64 available offers
+[2026-01-29T05:12:52.834+0000] {vast_ai_train.py:675} INFO - Attempting to create instance on pod 30696291 (machine 12330)
+[2026-01-29T05:12:52.834+0000] {vast_ai_train.py:676} INFO - Estimated cost: $0.1417/hour
+[2026-01-29T05:12:55.608+0000] {vast_ai_train.py:700} INFO - Using Docker image: dhayanandss/mlops:latest
+[2026-01-29T05:12:57.486+0000] {vast_ai_train.py:720} INFO - Command stdout: Started. {'success': True, 'new_contract': 30696911, 'instance_api_key': '42bdaec3540654973b54308e2882d2410defa4dc7506bc3070dc8852dd4111de'}
+
+[2026-01-29T05:12:57.487+0000] {vast_ai_train.py:732} INFO - Instance creation output: Started. {'success': True, 'new_contract': 30696911, 'instance_api_key': '42bdaec3540654973b54308e2882d2410defa4dc7506bc3070dc8852dd4111de'}
+[2026-01-29T05:13:01.849+0000] {vast_ai_train.py:339} INFO - Found newly created instance: 30696911
+[2026-01-29T05:13:01.850+0000] {vast_ai_train.py:782} INFO - Found newly created instance (parsed ID was incorrect): 30696911
+[2026-01-29T05:13:01.850+0000] {vast_ai_train.py:379} INFO - Waiting for instance 30696911 to become running...
+[2026-01-29T05:13:42.090+0000] {vast_ai_train.py:410} INFO - Instance 30696911 is now running
+[2026-01-29T05:13:48.171+0000] {vast_ai_train.py:310} INFO - Verified instance 30696911 exists in instance list
+[2026-01-29T05:13:48.172+0000] {vast_ai_train.py:795} INFO - Instance 30696911 is ready and verified!
+[2026-01-29T05:13:48.172+0000] {vast_ai_train.py:801} INFO - Uploading GCP credentials to instance 30696911
+[2026-01-29T05:13:52.341+0000] {vast_ai_train.py:89} INFO - Copying training data to instance 30696911...
+[2026-01-29T05:13:52.678+0000] {vast_ai_train.py:125} ERROR - Failed to copy data/prices/BTCUSDT.csv to instance: Command '['vastai', 'ssh-instance', '30696911', 'mkdir -p /workspace/crypto-ml-training-standalone/data/prices']' returned non-zero exit status 2.
+[2026-01-29T05:13:53.023+0000] {vast_ai_train.py:125} ERROR - Failed to copy data/articles/articles.csv to instance: Command '['vastai', 'ssh-instance', '30696911', 'mkdir -p /workspace/crypto-ml-training-standalone/data/articles']' returned non-zero exit status 2.
+[2026-01-29T05:13:53.025+0000] {python.py:237} INFO - Done. Returned value was: 30696911
+[2026-01-29T05:13:53.025+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2026-01-29T05:13:53.049+0000] {taskinstance.py:1205} INFO - Marking task as SUCCESS. dag_id=training_pipeline, task_id=vast_ai_train, execution_date=20260129T051221, start_date=20260129T051239, end_date=20260129T051353
+[2026-01-29T05:13:54.671+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 0
+[2026-01-29T05:13:54.693+0000] {taskinstance.py:3482} INFO - 4 downstream tasks scheduled from follow-on schedule check
+[2026-01-29T05:13:54.697+0000] {local_task_job_runner.py:222} INFO - ::endgroup::
