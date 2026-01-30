@@ -142,15 +142,15 @@ def run_ssh_command(instance_id: str, command: str):
     cmd.extend([f"{user}@{host}", command])
     
     # Retry logic for SSH connection (often fails immediately after boot)
-    max_retries = 5
+    max_retries = 30
     for attempt in range(max_retries):
         try:
             subprocess.run(cmd, check=True, capture_output=True)
             return
         except subprocess.CalledProcessError as e:
             if attempt < max_retries - 1:
-                logger.warning(f"SSH command failed (attempt {attempt+1}/{max_retries}). Retrying in 5s...")
-                time.sleep(5)
+                logger.warning(f"SSH command failed (attempt {attempt+1}/{max_retries}). Retrying in 10s...")
+                time.sleep(10)
             else:
                 logger.error(f"SSH command failed after {max_retries} attempts: {e}")
                 # Log stderr for debugging authentication issues
@@ -170,15 +170,15 @@ def copy_file_scp(instance_id: str, local_path: str, remote_path: str):
     cmd.extend([local_path, f"{user}@{host}:{remote_path}"])
     
     # Retry logic for SCP
-    max_retries = 5
+    max_retries = 30
     for attempt in range(max_retries):
         try:
             subprocess.run(cmd, check=True, capture_output=True)
             return
         except subprocess.CalledProcessError as e:
             if attempt < max_retries - 1:
-                logger.warning(f"SCP command failed (attempt {attempt+1}/{max_retries}). Retrying in 5s...")
-                time.sleep(5)
+                logger.warning(f"SCP command failed (attempt {attempt+1}/{max_retries}). Retrying in 10s...")
+                time.sleep(10)
             else:
                 logger.error(f"SCP command failed after {max_retries} attempts: {e}")
                 raise
