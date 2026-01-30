@@ -88,6 +88,7 @@ def copy_data_to_instance(instance_id: str):
     """
     logger.info(f"Copying training data to instance {instance_id}...")
 
+
 def get_ssh_info(instance_id: str) -> tuple[str, str, str]:
     """Parse SSH URL for an instance. Returns (host, port, user)."""
     try:
@@ -105,27 +106,83 @@ def get_ssh_info(instance_id: str) -> tuple[str, str, str]:
         logger.error(f"Failed to get SSH info for {instance_id}: {e}")
         raise
 
+def get_ssh_identity_path() -> Optional[str]:
+    """
+    Find a valid SSH private key.
+    Checks env var SSH_IDENTITY_FILE, then ~/.ssh/id_rsa, then ~/.ssh/lightning_rsa.
+    """
+    # 1. Check environment variable
+    env_path = os.getenv("SSH_IDENTITY_FILE")
+    if env_path and os.path.exists(env_path):
+        return env_path
+        
+    # 2. Check standard paths in user's .ssh directory
+    home = os.path.expanduser("~")
+    ssh_dir = os.path.join(home, ".ssh")
+    
+    candidates = ["id_rsa", "lightning_rsa", "id_ed25519"]
+    for name in candidates:
+        key_path = os.path.join(ssh_dir, name)
+        if os.path.exists(key_path):
+            logger.info(f"Found SSH identity file: {key_path}")
+            return key_path
+            
+    logger.warning("No standard SSH identity file found. SSH might fail if agent is not running.")
+    return None
+
 def run_ssh_command(instance_id: str, command: str):
     """Run command via SSH direct execution."""
     host, port, user = get_ssh_info(instance_id)
-    cmd = [
-        "ssh", "-p", port,
-        "-o", "StrictHostKeyChecking=no",
-        f"{user}@{host}",
-        command
-    ]
-    subprocess.run(cmd, check=True, capture_output=True)
+    key_path = get_ssh_identity_path()
+    
+    cmd = ["ssh", "-p", port, "-o", "StrictHostKeyChecking=no"]
+    if key_path:
+        cmd.extend(["-i", key_path])
+        
+    cmd.extend([f"{user}@{host}", command])
+    
+    # Retry logic for SSH connection (often fails immediately after boot)
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            subprocess.run(cmd, check=True, capture_output=True)
+            return
+        except subprocess.CalledProcessError as e:
+            if attempt < max_retries - 1:
+                logger.warning(f"SSH command failed (attempt {attempt+1}/{max_retries}). Retrying in 5s...")
+                time.sleep(5)
+            else:
+                logger.error(f"SSH command failed after {max_retries} attempts: {e}")
+                # Log stderr for debugging authentication issues
+                if e.stderr:
+                    logger.error(f"SSH Error Output: {e.stderr.decode('utf-8')}")
+                raise
 
 def copy_file_scp(instance_id: str, local_path: str, remote_path: str):
     """Copy file via SCP."""
     host, port, user = get_ssh_info(instance_id)
-    cmd = [
-        "scp", "-P", port,
-        "-o", "StrictHostKeyChecking=no",
-        local_path,
-        f"{user}@{host}:{remote_path}"
-    ]
-    subprocess.run(cmd, check=True, capture_output=True)
+    key_path = get_ssh_identity_path()
+    
+    cmd = ["scp", "-P", port, "-o", "StrictHostKeyChecking=no"]
+    if key_path:
+        cmd.extend(["-i", key_path])
+        
+    cmd.extend([local_path, f"{user}@{host}:{remote_path}"])
+    
+    # Retry logic for SCP
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            subprocess.run(cmd, check=True, capture_output=True)
+            return
+        except subprocess.CalledProcessError as e:
+            if attempt < max_retries - 1:
+                logger.warning(f"SCP command failed (attempt {attempt+1}/{max_retries}). Retrying in 5s...")
+                time.sleep(5)
+            else:
+                logger.error(f"SCP command failed after {max_retries} attempts: {e}")
+                raise
+
 
 def copy_data_to_instance(instance_id: str):
     """
