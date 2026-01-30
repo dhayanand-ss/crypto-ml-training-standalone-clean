@@ -100,8 +100,18 @@ def copy_data_to_instance(instance_id: str):
     data_files = {
         "data/prices/BTCUSDT.csv": f"/workspace/{repo_name}/data/prices/BTCUSDT.csv",
         "data/prices/BTCUSDT_test.csv": f"/workspace/{repo_name}/data/prices/BTCUSDT_test.csv",
+        "data/prices/BTCUSDT.csv": f"/workspace/{repo_name}/data/prices/BTCUSDT.csv",
+        "data/prices/BTCUSDT_test.csv": f"/workspace/{repo_name}/data/prices/BTCUSDT_test.csv",
         "data/articles/articles.csv": f"/workspace/{repo_name}/data/articles/articles.csv"
     }
+
+    # Add GCP credentials to file list if configured
+    gcp_creds_src = os.getenv("GCP_CREDENTIALS_PATH")
+    if gcp_creds_src and os.path.exists(gcp_creds_src):
+        logger.info(f"Adding GCP credentials to upload list: {gcp_creds_src}")
+        data_files[gcp_creds_src] = "/workspace/gcp-credentials.json"
+    else:
+        logger.warning("GCP_CREDENTIALS_PATH not set or file not found. Skipping credentials upload.")
     
     for host_path, remote_path in data_files.items():
         if not os.path.exists(host_path):
@@ -799,19 +809,8 @@ def create_instance(DEBUG: bool = False, **kwargs) -> Optional[str]:
                     if verified:
                         logger.info(f"Instance {instance_id} is ready and verified!")
                         
-                        # Upload GCP credentials
-                        try:
-                            gcp_creds_src = os.getenv("GCP_CREDENTIALS_PATH", "/opt/airflow/gcp-credentials.json")
-                            if os.path.exists(gcp_creds_src):
-                                logger.info(f"Uploading GCP credentials to instance {instance_id}")
-                                subprocess.run(
-                                    ["vastai", "copy", gcp_creds_src, f"{instance_id}:/workspace/gcp-credentials.json"],
-                                    check=True
-                                )
-                            else:
-                                logger.warning(f"GCP credentials file not found at {gcp_creds_src}")
-                        except Exception as e:
-                            logger.error(f"Failed to upload GCP credentials: {e}")
+                        # Upload GCP credentials is now handled by copy_data_to_instance
+
 
                         # Log instance ID to status DB
                         try:
