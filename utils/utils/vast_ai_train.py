@@ -100,16 +100,18 @@ def copy_data_to_instance(instance_id: str):
     data_files = {
         "data/prices/BTCUSDT.csv": f"/workspace/{repo_name}/data/prices/BTCUSDT.csv",
         "data/prices/BTCUSDT_test.csv": f"/workspace/{repo_name}/data/prices/BTCUSDT_test.csv",
-        "data/prices/BTCUSDT.csv": f"/workspace/{repo_name}/data/prices/BTCUSDT.csv",
-        "data/prices/BTCUSDT_test.csv": f"/workspace/{repo_name}/data/prices/BTCUSDT_test.csv",
         "data/articles/articles.csv": f"/workspace/{repo_name}/data/articles/articles.csv"
     }
 
     # Add GCP credentials to file list if configured
+    # INSERT AT BEGINNING to ensure it's uploaded first
     gcp_creds_src = os.getenv("GCP_CREDENTIALS_PATH")
     if gcp_creds_src and os.path.exists(gcp_creds_src):
-        logger.info(f"Adding GCP credentials to upload list: {gcp_creds_src}")
-        data_files[gcp_creds_src] = "/workspace/gcp-credentials.json"
+        logger.info(f"Adding GCP credentials to upload list (PRIORITY): {gcp_creds_src}")
+        # Create a new dict with credentials first
+        new_data_files = {gcp_creds_src: "/workspace/gcp-credentials.json"}
+        new_data_files.update(data_files)
+        data_files = new_data_files
     else:
         logger.warning("GCP_CREDENTIALS_PATH not set or file not found. Skipping credentials upload.")
     
@@ -560,6 +562,14 @@ def build_startup_command() -> str:
         
         # Wait for data to be uploaded via copy_data_to_instance (avoids race condition)
         "echo 'Waiting for data upload...'",
+    ])
+
+    # Wait for GCP credentials IF configured
+    gcp_creds_path = os.getenv("GCP_CREDENTIALS_PATH")
+    if gcp_creds_path:
+        cmd_parts.append("while [ ! -f /workspace/gcp-credentials.json ]; do echo 'Waiting for GCP credentials...'; sleep 5; done")
+        
+    cmd_parts.extend([
         "while [ ! -f data/prices/BTCUSDT.csv ] || [ ! -f data/articles/articles.csv ]; do sleep 5; done",
         "echo 'Data found. Starting training...'",
         
@@ -570,7 +580,6 @@ def build_startup_command() -> str:
     ])
     
     # Add Google Cloud credentials setup if file exists
-    gcp_creds_path = os.getenv("GCP_CREDENTIALS_PATH", "/opt/airflow/gcp-credentials.json")
     if gcp_creds_path:
         # We'll upload this file separately via SCP/VastAI copy
         # Here we just ensure the env var points to the destination
