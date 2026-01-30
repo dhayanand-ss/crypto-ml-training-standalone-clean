@@ -87,7 +87,50 @@ def copy_data_to_instance(instance_id: str):
     This bypasses the need for GCS credentials on the remote instance.
     """
     logger.info(f"Copying training data to instance {instance_id}...")
-    
+
+def get_ssh_info(instance_id: str) -> tuple[str, str, str]:
+    """Parse SSH URL for an instance. Returns (host, port, user)."""
+    try:
+        cmd = ["vastai", "ssh-url", instance_id]
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        url = result.stdout.strip()
+        # format: ssh://root@host:port
+        if "://" in url:
+            url = url.split("://")[1]
+        
+        user_host, port = url.split(":")
+        user, host = user_host.split("@")
+        return host, port, user
+    except Exception as e:
+        logger.error(f"Failed to get SSH info for {instance_id}: {e}")
+        raise
+
+def run_ssh_command(instance_id: str, command: str):
+    """Run command via SSH direct execution."""
+    host, port, user = get_ssh_info(instance_id)
+    cmd = [
+        "ssh", "-p", port,
+        "-o", "StrictHostKeyChecking=no",
+        f"{user}@{host}",
+        command
+    ]
+    subprocess.run(cmd, check=True, capture_output=True)
+
+def copy_file_scp(instance_id: str, local_path: str, remote_path: str):
+    """Copy file via SCP."""
+    host, port, user = get_ssh_info(instance_id)
+    cmd = [
+        "scp", "-P", port,
+        "-o", "StrictHostKeyChecking=no",
+        local_path,
+        f"{user}@{host}:{remote_path}"
+    ]
+    subprocess.run(cmd, check=True, capture_output=True)
+
+def copy_data_to_instance(instance_id: str):
+    """
+    Copy data files to the instance using SCP.
+    """
     # Calculate the repository name (MUST match build_startup_command logic)
     github_repo = os.getenv("VASTAI_GITHUB_REPO", "")
     if github_repo:
@@ -123,17 +166,13 @@ def copy_data_to_instance(instance_id: str):
         try:
             # Ensure remote directory exists
             remote_dir = os.path.dirname(remote_path)
-            subprocess.run(
-                ["vastai", "ssh-instance", instance_id, f"mkdir -p {remote_dir}"],
-                check=True, capture_output=True
-            )
+            logger.info(f"Ensuring remote directory exists: {remote_dir}")
+            run_ssh_command(instance_id, f"mkdir -p {remote_dir}")
             
             # Copy file
             logger.info(f"Uploading {host_path}...")
-            subprocess.run(
-                ["vastai", "copy", host_path, f"{instance_id}:{remote_path}"],
-                check=True, capture_output=True
-            )
+            copy_file_scp(instance_id, host_path, remote_path)
+            
         except Exception as e:
             logger.error(f"Failed to copy {host_path} to instance: {e}")
 
